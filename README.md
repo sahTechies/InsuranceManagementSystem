@@ -47,7 +47,7 @@ A command-line Insurance Management System written in **C++** with **SQLite** pe
 | Language  | C++ (C++11 or later) |
 | Database  | SQLite 3 |
 | Build     | `g++` (GCC) |
-| Platform  | Linux / macOS (uses `/proc/self/exe`) |
+| Platform  | Linux (uses `/proc/self/exe` for path resolution; macOS requires adaptation) |
 
 ---
 
@@ -128,14 +128,30 @@ Client added successfully with ID: 101
 
 ```
 Select option: 2
+Registered Clients:
+ID: 101 | Name: Jane Doe
+
 Enter Client ID to add policy: 101
 Available Policies: 1. Health  2. Auto  3. Life
 Select policy type (1-3): 3
-Enter Coverage Amount: 500000
-Enter payment mode (1=Yearly, 2=Monthly): 1
+Enter Coverage Amount (any decimal): 500000
+Do you want monthly payment? (y/n): n
+
+========== INSURANCE CONTRACT ==========
+Client Name      : Jane Doe
+Client ID        : 101
+Policy Record ID : 1001
+Policy ID        : 5003
+Policy Category  : Life
+Policy Plan      : Life
+Coverage Amount  : ₹500000.00
+Payment Mode     : Yearly
+Premium Payable  : ₹8260.00 per year
+Contract Status  : ACTIVE
+========================================
 ```
 
-The system prints a full insurance contract and saves the policy to the database.
+> **Premium breakdown:** Base = `500000 × 0.01 × 1.4 = ₹7000`; Age risk factor for age 34 = `1 + (34 − 25) × 0.02 = 1.18`; Final = `7000 × 1.18 = ₹8260`. Actual value will depend on the exact age entered.
 
 **Step 3 – Export records (Option 5)**
 
@@ -360,6 +376,7 @@ InsuranceManagementSystem/
 ├── application            # Pre-built Linux binary
 ├── insurance_data.db      # SQLite database (auto-created on first run)
 ├── insurance_export.csv   # CSV export output (created on Option 5)
+├── LICENSE                # MIT License
 └── README.md              # This file
 ```
 
@@ -378,29 +395,7 @@ Contributions are welcome! Feel free to open an issue or submit a pull request. 
 
 ## License
 
-This project is released under the [MIT License](https://opensource.org/licenses/MIT).
+This project is released under the [MIT License](LICENSE).
 
-```
-MIT License
-
-Copyright (c) 2024 sahTechies
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+See the `LICENSE` file for the full license text.
 
