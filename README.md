@@ -11,12 +11,16 @@ A command-line Insurance Management System written in **C++** with **SQLite** pe
 - [Prerequisites](#prerequisites)
 - [Build Instructions](#build-instructions)
 - [Running the Application](#running-the-application)
+- [Sample Workflow](#sample-workflow)
 - [Menu Options](#menu-options)
 - [Policy Types](#policy-types)
 - [Premium Calculation](#premium-calculation)
 - [Data Validation Rules](#data-validation-rules)
+- [Database Schema](#database-schema)
+- [CSV Export Format](#csv-export-format)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -89,6 +93,61 @@ On first launch the application creates `insurance_data.db` in the same director
 
 ```
 Loaded 0 client(s) from SQLite database: /path/to/insurance_data.db
+```
+
+---
+
+## Sample Workflow
+
+Below is a quick end-to-end example that registers a client and issues a Life policy.
+
+**Step 1 – Add a client (Option 1)**
+
+```
+Select option: 1
+Enter Client Name: Jane Doe
+Enter Date of Birth (DD-MM-YYYY): 15-06-1990
+Enter Age: 34
+Enter Phone Number (10 digits): 9876543210
+Enter Email: jane@example.com
+Enter Father's Name: John Doe
+Enter Mother's Name: Mary Doe
+Married? (y/n): n
+Enter Address: 42 Main Street, Mumbai
+Enter Occupation: Software Engineer
+Enter Government ID (PAN/Aadhaar/Passport): ABCDE1234F
+Enter Nominee Name: John Doe
+Enter Nominee Relation: Father
+Enter Annual Income: 1200000
+Smoker? (y/n): n
+Enter Medical History / Pre-existing Conditions: None
+Client added successfully with ID: 101
+```
+
+**Step 2 – Purchase a Life policy (Option 2 → type 3)**
+
+```
+Select option: 2
+Enter Client ID to add policy: 101
+Available Policies: 1. Health  2. Auto  3. Life
+Select policy type (1-3): 3
+Enter Coverage Amount: 500000
+Enter payment mode (1=Yearly, 2=Monthly): 1
+```
+
+The system prints a full insurance contract and saves the policy to the database.
+
+**Step 3 – Export records (Option 5)**
+
+```
+Select option: 5
+Export complete. Records saved to: /path/to/insurance_export.csv
+```
+
+**Step 4 – Exit (Option 7)**
+
+```
+Select option: 7
 ```
 
 ---
@@ -212,6 +271,87 @@ Surrender Value = (Paid-Up Value + Accrued Bonuses) × (Surrender Factor % / 100
 
 ---
 
+## Database Schema
+
+All data is persisted in `insurance_data.db` (SQLite 3). The database contains two tables.
+
+### `clients`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `clientID` | INTEGER PK | Auto-assigned starting at 101 |
+| `name` | TEXT | Full name |
+| `age` | INTEGER | Age in years (1–120) |
+| `dateOfBirth` | TEXT | Format `DD-MM-YYYY` |
+| `phoneNumber` | TEXT | 10-digit Indian mobile number |
+| `email` | TEXT | Email address |
+| `fatherName` | TEXT | Father's name |
+| `motherName` | TEXT | Mother's name |
+| `isMarried` | INTEGER | 0 = No, 1 = Yes |
+| `spouseName` | TEXT | Spouse name (`N/A` if unmarried) |
+| `address` | TEXT | Residential address |
+| `occupation` | TEXT | Occupation / job title |
+| `governmentID` | TEXT | PAN / Aadhaar / Passport (uppercase) |
+| `nomineeName` | TEXT | Policy nominee's name |
+| `nomineeRelation` | TEXT | Relationship to nominee |
+| `annualIncome` | REAL | Annual income (≥ 0) |
+| `isSmoker` | INTEGER | 0 = No, 1 = Yes |
+| `medicalHistory` | TEXT | Pre-existing conditions |
+
+### `policies`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `recordID` | INTEGER PK | Auto-assigned starting at 1001 |
+| `clientID` | INTEGER FK | References `clients.clientID` |
+| `policyID` | INTEGER | Policy type code (5001 Health, 5002 Auto, 5003 Life) |
+| `category` | TEXT | `Health`, `Auto`, or `Life` |
+| `planName` | TEXT | Plan name (e.g., `Pure Term`, `Whole Life`) |
+| `coverageAmount` | REAL | Sum assured / coverage amount |
+| `basePremium` | REAL | Computed base premium |
+| `paymentMode` | TEXT | `Yearly` or `Monthly` |
+| `premiumTermYears` | INTEGER | Number of years premiums are paid |
+| `policyTermYears` | INTEGER | Total policy duration in years |
+| `mortalityRate` | REAL | Mortality rate qx (0.0 – 1.0) |
+| `interestRate` | REAL | Interest rate i (0.0 – 1.0) |
+| `expensesRate` | REAL | Expense loading % (0.0 – 100.0) |
+| `contingencyRate` | REAL | Contingency margin % (0.0 – 100.0) |
+| `profitRate` | REAL | Profit loading % (0.0 – 100.0) |
+| `accruedBonuses` | REAL | Accrued bonuses for surrender calculations |
+| `surrenderValueFactor` | REAL | Surrender factor % used in surrender value |
+| `isActive` | INTEGER | 0 = Inactive, 1 = Active |
+
+---
+
+## CSV Export Format
+
+Option 5 writes every client–policy combination to `insurance_export.csv` in the executable's directory. Each row represents one policy. Clients with no policies get a single placeholder row.
+
+```
+ClientID, ClientName, Age, DOB, Phone, Email, FatherName, MotherName,
+Married, SpouseName, Address, Occupation, GovernmentID, NomineeName,
+NomineeRelation, AnnualIncome, Smoker, MedicalHistory,
+PolicyRecordID, PolicyID, PolicyCategory, PolicyPlan,
+PaymentMode, CoverageAmount, BasePremium, FinalPremium, Status
+```
+
+| Column | Description |
+|--------|-------------|
+| `ClientID` – `MedicalHistory` | Client KYC fields (see Database Schema above) |
+| `PolicyRecordID` | Unique policy record identifier |
+| `PolicyID` | Policy type code |
+| `PolicyCategory` | `Health`, `Auto`, or `Life` |
+| `PolicyPlan` | Plan name |
+| `PaymentMode` | `Yearly` or `Monthly` |
+| `CoverageAmount` | Sum assured |
+| `BasePremium` | Base premium before age risk factor |
+| `FinalPremium` | Base premium × age risk factor |
+| `Status` | `Active` or `Inactive` |
+
+> Clients with no policies have `N/A` in all policy columns and `0` for numeric policy fields.
+
+---
+
 ## Project Structure
 
 ```
@@ -233,4 +373,34 @@ Contributions are welcome! Feel free to open an issue or submit a pull request. 
 - Report generation (PDF / HTML)
 - GUI front-end (Qt or web-based)
 - Unit test coverage
+
+---
+
+## License
+
+This project is released under the [MIT License](https://opensource.org/licenses/MIT).
+
+```
+MIT License
+
+Copyright (c) 2024 sahTechies
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
