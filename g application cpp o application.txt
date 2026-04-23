@@ -1,0 +1,3 @@
+g++ -std=c++17 application.cpp -o application -lsqlite3
+./application
+
