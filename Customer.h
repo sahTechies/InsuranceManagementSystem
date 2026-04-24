@@ -1,19 +1,19 @@
 #pragma once
 
 /**
- * @brief Class managing customer interactions
- * Handles policy viewing, dynamic pricing selection workflow, and claims.
+ * @brief Class encapsulating the workflow for a logged-in customer.
  */
 class Customer {
 private:
     int loggedInUserId;
 
+public:
+    Customer(int userId);
+    void displayMenu();
     void viewAvailablePolicies();
     void purchasePolicy();
     void viewMyPolicies();
     void fileClaim();
-
-public:
-    Customer(int userId);
-    void displayMenu();
+    void viewMyClaims();
+    void showNotifications();
 };

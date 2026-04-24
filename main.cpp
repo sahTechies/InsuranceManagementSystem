@@ -29,7 +29,53 @@ void login() {
 }
 
 /**
- * @brief Creates a new user record checking for duplicates.
+ * @brief Collects KYC personal details when registering a customer.
+ */
+void collectKYC(User& u) {
+    std::cout << "\n--- Personal Details (KYC) ---\n";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    
+    while (true) {
+        std::cout << "Full Name: "; 
+        std::getline(std::cin, u.full_name);
+        if (!u.full_name.empty()) break;
+    }
+    
+    while (true) {
+        std::cout << "Age: ";
+        if (std::cin >> u.age && u.age > 0) {
+            break;
+        }
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Error: Age must be a positive integer.\n";
+    }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (true) {
+        std::cout << "Gender: "; std::getline(std::cin, u.gender);
+        if (!u.gender.empty()) break;
+    }
+    while (true) {
+        std::cout << "Marital Status: "; std::getline(std::cin, u.marital_status);
+        if (!u.marital_status.empty()) break;
+    }
+    while (true) {
+        std::cout << "Nominee Name: "; std::getline(std::cin, u.nominee_name);
+        if (!u.nominee_name.empty()) break;
+    }
+    while (true) {
+        std::cout << "Father's Name: "; std::getline(std::cin, u.father_name);
+        if (!u.father_name.empty()) break;
+    }
+    while (true) {
+        std::cout << "Mother's Name: "; std::getline(std::cin, u.mother_name);
+        if (!u.mother_name.empty()) break;
+    }
+}
+
+/**
+ * @brief Creates a new user record checking for duplicates and KYC.
  */
 void registerUser() {
     User u;
@@ -45,6 +91,18 @@ void registerUser() {
     std::cin >> u.password;
     std::cout << "Role (admin/customer): ";
     std::cin >> u.role;
+
+    if (u.role == "customer") {
+        collectKYC(u);
+    } else {
+        u.full_name = u.username;
+        u.age = 0;
+        u.gender = "N/A";
+        u.marital_status = "N/A";
+        u.nominee_name = "N/A";
+        u.father_name = "N/A";
+        u.mother_name = "N/A";
+    }
 
     if (DatabaseManager::getInstance().createUser(u)) {
         std::cout << "User registered successfully.\n";

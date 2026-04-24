@@ -33,6 +33,8 @@ public:
     // User operations
     bool createUser(const User& user);
     std::optional<User> getUserByUsername(const std::string& username);
+    std::optional<User> getUserById(int id);
+    bool addBalanceToUser(int userId, double amount);
 
     // Policy operations
     bool createPolicy(const Policy& policy);
@@ -42,9 +44,19 @@ public:
     // UserPolicy operations
     bool assignPolicyToUser(int userId, int policyId, double totalPremium, const std::string& activeAddons, const std::string& expiryDate);
     std::vector<UserPolicyView> getUserPolicies(int userId);
+    bool markUserPolicyClaimed(int userId, int policyId);
 
     // Claim operations
     bool createClaim(const Claim& claim);
     std::vector<Claim> getAllClaims();
+    std::vector<PendingClaimView> getPendingClaims();
     bool updateClaimStatus(int claimId, const std::string& status, const std::string& adminRemarks);
+    
+    // Claim Notification & Viewing operations
+    std::vector<UserClaimView> getUserClaims(int userId);
+    std::vector<UserClaimView> getUnnotifiedClaims(int userId);
+    bool markClaimNotified(int claimId);
+    
+    // Export Operations
+    std::vector<ExportClaimView> getApprovedClaimsForExport();
 };

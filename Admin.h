@@ -1,17 +1,15 @@
 #pragma once
 
 /**
- * @brief Class managing administrative tasks
- * Handles policy creation, viewing global claims, and managing status.
+ * @brief Class encapsulating the workflow for an administrative user.
  */
 class Admin {
-private:
+public:
+    Admin();
+    void displayMenu();
     void addPolicy();
     void viewAllPolicies();
     void viewAllClaims();
     void approveRejectClaim();
-
-public:
-    Admin();
-    void displayMenu();
+    void exportApprovedClaims();
 };
