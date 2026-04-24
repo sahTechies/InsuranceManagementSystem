@@ -1,0 +1,3 @@
+6
+ClaimID,CustomerName,Age,Policy,Amount,Reason,Remarks,Nominee,CurrentBalance,PayoutDate
+1,"Roshan Shah",20,"Whole Life",40000,"he died in car crash.","Sorry, To hear that.","Raghab Shah",40000,"2026-04-24"

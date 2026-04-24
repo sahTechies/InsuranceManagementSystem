@@ -13,6 +13,7 @@ void login() {
     std::cin >> username;
     std::cout << "Password: ";
     std::cin >> password;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // FLUSH
 
     auto user = DatabaseManager::getInstance().getUserByUsername(username);
     if (user && user->password == password) {
@@ -33,7 +34,7 @@ void login() {
  */
 void collectKYC(User& u) {
     std::cout << "\n--- Personal Details (KYC) ---\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    // We expect the buffer to be clean when entering this function now.
     
     while (true) {
         std::cout << "Full Name: "; 
@@ -84,6 +85,8 @@ void registerUser() {
     
     if (DatabaseManager::getInstance().getUserByUsername(u.username)) {
         std::cout << "Error: Username already exists.\n";
+        // Ensure buffer is clean before returning to menu
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         return;
     }
 
@@ -91,6 +94,7 @@ void registerUser() {
     std::cin >> u.password;
     std::cout << "Role (admin/customer): ";
     std::cin >> u.role;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // FLUSH
 
     if (u.role == "customer") {
         collectKYC(u);
