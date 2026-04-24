@@ -2,24 +2,25 @@
 #include "Admin.h"
 #include "Customer.h"
 #include <iostream>
-#include <memory>
 #include <limits>
 
-// Why: Keeps the main loop small and handles specific login logic
-void login(std::shared_ptr<DatabaseManager> db) {
+/**
+ * @brief Authenticates users via DB query.
+ */
+void login() {
     std::string username, password;
     std::cout << "Username: ";
     std::cin >> username;
     std::cout << "Password: ";
     std::cin >> password;
 
-    auto user = db->getUserByUsername(username);
+    auto user = DatabaseManager::getInstance().getUserByUsername(username);
     if (user && user->password == password) {
         if (user->role == "admin") {
-            Admin admin(db);
+            Admin admin;
             admin.displayMenu();
         } else {
-            Customer customer(db, user->id);
+            Customer customer(user->id);
             customer.displayMenu();
         }
     } else {
@@ -27,14 +28,15 @@ void login(std::shared_ptr<DatabaseManager> db) {
     }
 }
 
-// Why: Separation of concern for account registration
-void registerUser(std::shared_ptr<DatabaseManager> db) {
+/**
+ * @brief Creates a new user record checking for duplicates.
+ */
+void registerUser() {
     User u;
     std::cout << "Username: ";
     std::cin >> u.username;
     
-    // Why: Validation step to avoid duplicate usernames
-    if (db->getUserByUsername(u.username)) {
+    if (DatabaseManager::getInstance().getUserByUsername(u.username)) {
         std::cout << "Error: Username already exists.\n";
         return;
     }
@@ -44,23 +46,24 @@ void registerUser(std::shared_ptr<DatabaseManager> db) {
     std::cout << "Role (admin/customer): ";
     std::cin >> u.role;
 
-    if (db->createUser(u)) {
+    if (DatabaseManager::getInstance().createUser(u)) {
         std::cout << "User registered successfully.\n";
     }
 }
 
+/**
+ * @brief Application entry point. Initializes Schema, sets up Singleton DB.
+ */
 int main() {
-    auto db = std::make_shared<DatabaseManager>();
-    if (!db->connect("insurance_system.db")) {
+    if (!DatabaseManager::getInstance().connect("insurance_system.db")) {
         std::cerr << "Failed to connect to database.\n";
         return 1;
     }
-    
-    db->initializeSchema();
+    DatabaseManager::getInstance().initializeSchema();
 
     int choice = 0;
     while (choice != 3) {
-        std::cout << "\n--- Insurance Management System ---\n";
+        std::cout << "\n--- Professional Insurance Management System ---\n";
         std::cout << "1. Login\n2. Register\n3. Exit\nChoice: ";
         if (!(std::cin >> choice)) {
             std::cin.clear();
@@ -69,8 +72,8 @@ int main() {
         }
 
         switch (choice) {
-            case 1: login(db); break;
-            case 2: registerUser(db); break;
+            case 1: login(); break;
+            case 2: registerUser(); break;
             case 3: std::cout << "Exiting...\n"; break;
             default: std::cout << "Invalid choice.\n";
         }

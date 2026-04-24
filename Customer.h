@@ -1,10 +1,11 @@
 #pragma once
-#include "DatabaseManager.h"
-#include <memory>
 
+/**
+ * @brief Class managing customer interactions
+ * Handles policy viewing, dynamic pricing selection workflow, and claims.
+ */
 class Customer {
 private:
-    std::shared_ptr<DatabaseManager> db;
     int loggedInUserId;
 
     void viewAvailablePolicies();
@@ -13,6 +14,6 @@ private:
     void fileClaim();
 
 public:
-    Customer(std::shared_ptr<DatabaseManager> dbManager, int userId);
+    Customer(int userId);
     void displayMenu();
 };

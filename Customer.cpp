@@ -1,10 +1,15 @@
 #include "Customer.h"
+#include "DatabaseManager.h"
 #include <iostream>
 #include <limits>
+#include <iomanip>
 
-Customer::Customer(std::shared_ptr<DatabaseManager> dbManager, int userId) 
-    : db(std::move(dbManager)), loggedInUserId(userId) {}
+Customer::Customer(int userId) : loggedInUserId(userId) {}
 
+/**
+ * @brief Displays the main customer menu
+ * Interacts with cin, handles invalid non-numeric inputs via cin.clear().
+ */
 void Customer::displayMenu() {
     int choice = 0;
     while (choice != 5) {
@@ -27,53 +32,124 @@ void Customer::displayMenu() {
     }
 }
 
+/**
+ * @brief Views all seeded available policies from the db using left-aligned setw.
+ */
 void Customer::viewAvailablePolicies() {
-    auto policies = db->getAllPolicies();
+    auto policies = DatabaseManager::getInstance().getAllPolicies();
     std::cout << "\n--- Available Policies ---\n";
+    std::cout << std::left << std::setw(5) << "ID" << std::setw(20) << "Name" 
+              << std::setw(15) << "Category" << std::setw(15) << "Base Premium" 
+              << std::setw(15) << "Base Coverage" << "\n";
     for (const auto& p : policies) {
-        std::cout << "ID: " << p.id << " | Name: " << p.name 
-                  << " | Premium: $" << p.premium << " | Coverage: $" << p.coverage << "\n";
+        std::cout << std::left << std::setw(5) << p.id << std::setw(20) << p.name 
+                  << std::setw(15) << p.category << std::setw(15) << p.base_premium 
+                  << std::setw(15) << p.base_coverage << "\n";
     }
 }
 
+/**
+ * @brief Implements dynamic pricing selection workflow (Add-ons).
+ * Retrieves base policy, asks specific category-based prompts, and computes total.
+ */
 void Customer::purchasePolicy() {
     int policyId;
     std::cout << "Enter Policy ID to purchase: ";
-    std::cin >> policyId;
+    if (!(std::cin >> policyId)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input.\n";
+        return;
+    }
 
-    if (db->assignPolicyToUser(loggedInUserId, policyId, "Active")) {
-        std::cout << "Policy purchased successfully.\n";
+    auto policyOpt = DatabaseManager::getInstance().getPolicyById(policyId);
+    if (!policyOpt) {
+        std::cout << "Policy not found.\n";
+        return;
+    }
+    Policy p = policyOpt.value();
+    
+    double totalPremium = p.base_premium;
+    std::string activeAddons = "";
+
+    std::cout << "Base Premium: " << p.base_premium << "\n";
+
+    if (p.category == "Life") {
+        char ch;
+        std::cout << "Add Accidental Death (+500)? (y/n): ";
+        std::cin >> ch;
+        if (ch == 'y' || ch == 'Y') { totalPremium += 500; activeAddons += "Accidental Death, "; }
+        
+        std::cout << "Add Critical Illness (+1500)? (y/n): ";
+        std::cin >> ch;
+        if (ch == 'y' || ch == 'Y') { totalPremium += 1500; activeAddons += "Critical Illness, "; }
+    } else if (p.category == "Home") {
+        char ch;
+        std::cout << "Add Fire Damage (+500)? (y/n): ";
+        std::cin >> ch;
+        if (ch == 'y' || ch == 'Y') { totalPremium += 500; activeAddons += "Fire Damage, "; }
+        
+        std::cout << "Add Theft Protection (+400)? (y/n): ";
+        std::cin >> ch;
+        if (ch == 'y' || ch == 'Y') { totalPremium += 400; activeAddons += "Theft Protection, "; }
+    }
+    
+    if (activeAddons.empty()) activeAddons = "None";
+    
+    std::cout << "Final Premium calculated: " << totalPremium << "\n";
+    
+    if (DatabaseManager::getInstance().assignPolicyToUser(loggedInUserId, policyId, totalPremium, activeAddons, "2027-01-01")) {
+        std::cout << "Policy purchased successfully with selected add-ons.\n";
     } else {
         std::cout << "Failed to purchase policy.\n";
     }
 }
 
-// Why: Fulfills spec by querying user-specific policies which leverages JOIN
+/**
+ * @brief Views user specific policies showing active addons and total premium.
+ */
 void Customer::viewMyPolicies() {
-    auto myPolicies = db->getUserPolicies(loggedInUserId);
+    auto myPolicies = DatabaseManager::getInstance().getUserPolicies(loggedInUserId);
     std::cout << "\n--- My Policies ---\n";
+    if (myPolicies.empty()) {
+        std::cout << "No policies found.\n";
+        return;
+    }
+    std::cout << std::left << std::setw(20) << "Policy" << std::setw(15) << "Category" 
+              << std::setw(15) << "Total Premium" << std::setw(30) << "Active Add-ons" << "\n";
     for (const auto& p : myPolicies) {
-        std::cout << "Policy: " << p.policy_name << " | Category: " << p.category 
-                  << " | Premium: $" << p.premium << " | Status: " << p.status << "\n";
+        std::cout << std::left << std::setw(20) << p.policy_name << std::setw(15) << p.category 
+                  << std::setw(15) << p.total_premium << std::setw(30) << p.active_addons << "\n";
     }
 }
 
+/**
+ * @brief Files a claim linked to the current logged in user.
+ */
 void Customer::fileClaim() {
     Claim c;
     c.user_id = loggedInUserId;
     std::cout << "Enter Policy ID for claim: ";
-    std::cin >> c.policy_id;
+    if (!(std::cin >> c.policy_id)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        return;
+    }
     std::cout << "Enter Claim Amount: $";
-    std::cin >> c.amount;
+    if (!(std::cin >> c.amount)) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        return;
+    }
     c.status = "Pending";
+    c.admin_remarks = "None";
 
-    // Why: Prevent invalid claim amounts at the entry point
     if (c.amount < 0) {
         std::cout << "Error: Claim amount cannot be negative.\n";
         return;
     }
 
-    if (db->createClaim(c)) {
+    if (DatabaseManager::getInstance().createClaim(c)) {
         std::cout << "Claim filed successfully.\n";
     } else {
         std::cout << "Failed to file claim.\n";

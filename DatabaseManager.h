@@ -6,16 +6,26 @@
 
 struct sqlite3; // Forward declaration
 
-// Why: This class encapsulates all DB access. If we switch to MySQL,
-// only this class changes, not Admin or Customer (Business Logic).
+/**
+ * @brief Singleton DatabaseManager to encapsulate SQLite operations
+ * Uses prepared statements to prevent SQL injection.
+ */
 class DatabaseManager {
 private:
     sqlite3* db = nullptr;
-    bool executeNonQuery(const std::string& sql);
-
-public:
+    
+    // Private constructor/destructor for Singleton
     DatabaseManager();
     ~DatabaseManager();
+
+    // Prevent copy
+    DatabaseManager(const DatabaseManager&) = delete;
+    DatabaseManager& operator=(const DatabaseManager&) = delete;
+
+    void seedData();
+
+public:
+    static DatabaseManager& getInstance();
 
     bool connect(const std::string& dbPath);
     bool initializeSchema();
@@ -27,13 +37,14 @@ public:
     // Policy operations
     bool createPolicy(const Policy& policy);
     std::vector<Policy> getAllPolicies();
+    std::optional<Policy> getPolicyById(int id);
 
     // UserPolicy operations
-    bool assignPolicyToUser(int userId, int policyId, const std::string& status);
+    bool assignPolicyToUser(int userId, int policyId, double totalPremium, const std::string& activeAddons, const std::string& expiryDate);
     std::vector<UserPolicyView> getUserPolicies(int userId);
 
     // Claim operations
     bool createClaim(const Claim& claim);
     std::vector<Claim> getAllClaims();
-    bool updateClaimStatus(int claimId, const std::string& status);
+    bool updateClaimStatus(int claimId, const std::string& status, const std::string& adminRemarks);
 };
