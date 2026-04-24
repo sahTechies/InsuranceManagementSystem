@@ -1,3 +1,0 @@
-ClientID,ClientName,Age,DOB,Phone,Email,FatherName,MotherName,Married,SpouseName,Address,Occupation,GovernmentID,NomineeName,NomineeRelation,AnnualIncome,Smoker,MedicalHistory,PolicyRecordID,PolicyID,PolicyCategory,PolicyPlan,PaymentMode,CoverageAmount,BasePremium,FinalPremium,Status
-101,Demo Client,30,01-01-1996,9876543210,demo@example.com,Demo Father,Demo Mother,No,N/A,Demo Address,Demo Job,ABCDE1234F,Demo Nominee,Sibling,500000.00,No,None,N/A,N/A,N/A,N/A,N/A,0,0,0,N/A
-102,Hemant Kumar Sah,18,16-01-2008,9811034175,sah20080116@gmail.com,Shiv Shankar Sah,Sugabati Sah,No,N/A,Bitatnagar 11,Student,AAAAA9999A,Sugabati sah,Mother,0.00,No,n,1001,5003,Life,Life,Yearly,100000.00,1400.00,1400.00,Active
